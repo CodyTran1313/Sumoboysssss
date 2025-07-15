@@ -11,6 +11,8 @@
 #define echoPin1 3
 #define trigPin1 4
 
+// hi
+
 // Infrared sensor pins
 // CHANGE THIS
 #define IRPin 6
