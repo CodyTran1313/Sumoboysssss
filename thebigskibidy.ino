@@ -11,7 +11,7 @@
 #define echoPin1 3
 #define trigPin1 4
 
-// hi
+// fk alex
 
 // Infrared sensor pins
 // CHANGE THIS
@@ -34,9 +34,10 @@ int LEFT_R = 8; // Pin to move motor backwards (IN4)
 #define WAITING 0
 #define SEARCHING 1
 #define ATTACKING 2
+#define SPEEDOFSENSOR 0.0340
 
 // TODO: Initialise more global variables to be used
-int currentState = WAITING;
+int currentState = SEARCHING    ;
 
 ////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////// Setup Function /////////////////////////////////
@@ -52,7 +53,6 @@ void setup() {
   //Setup serial communication at 9600 baudrate to allow testing for
   // input/output of the sumobot
   Serial.begin(9600);
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -68,44 +68,57 @@ void loop() {
     //     delay(5000);
     //     currentState = SEARCHING;
     // }
-    driveForwards();
 
     // If the IR doesnt detect white, the bot wil only run this while loop
-    // if (checkBorder(IRPin) == 0) {
-    //     // A switch statement allows us to compare a given variable to multiple
-    //     // cases.
-    //     switch (currentState) {
-    //     case SEARCHING:
-    //         // TODO: Add code to search for another bot
-    //         // (e.g., rotate or move in a pattern)
+    if (checkBorder(IRPin) == 0) {
+        // A switch statement allows us to compare a given variable to multiple
+        // cases.
+        switch (currentState) {
+        case SEARCHING:
+            // TODO: Add code to search for another bot
+            //Hula to find other robot
+            //180, check bot
+            //if not within x range, do 360 turn
 
-    //         // For now, if you have wired up your bot correctly, this should be
-    //         // printing out the distance being read from teh
-    //         double distanceDetected = getDistance(trigPin1, echoPin1);
+            // For now, if you have wired up your bot correctly, this should be
+            // printing out the distance being read from teh
+            double distanceDetected = getDistance(trigPin1, echoPin1);
 
-    //         // Use println statements to ensure that you code is working properly
-    //         // String([value]) converts a value to a string, and you can add strings
-    //         // to each other to combine them into one.
-    //         Serial.println("Distance detected: " + String(distanceDetected) + " cm");
+            // Use println statements to ensure that you code is working properly
+            // String([value]) converts a value to a string, and you can add strings
+            // to each other to combine them into one.
+            Serial.println("Distance detected: " + String(distanceDetected) + " cm");
             
-    //         // if another bot is found, what should the new currentState be?
+            // if another bot is found, what should the new currentState be?
             
-    //     case ATTACKING:
-    //         // TODO: Add code to move forward aggressively towards the
-    //         // detected bot
+        case ATTACKING:
+            // TODO: Add code to move forward aggressively towards the
+            // detected bot
+            
+            
+            // If it finds bot, ram at it
+            if (getDistance(trigPin1, echoPin1) <= 50) {
+                driveForwards();
+
+                if (getDistance(trigPin1, echoPin1) <= 3) {
+
+                }
+            } else {
+                stop
+            }
             
 
-    //         // If the other bot is lost, what should the new currentState be?
+            // If the other bot is lost, what should the new currentState be?
             
-    //     default:
-    //         // This is for if the currentState is neither SEARCHING or ATTACKING
+        default:
+            // This is for if the currentState is neither SEARCHING or ATTACKING
             
-    //         break;
-    //     }
-    //     // What other states would you need?
+            break;
+        }
+        // What other states would you need?
 
-    //     delay(250); // Small delay for stability
-    // }
+        delay(250); // Small delay for stability
+    }
 
     // The bot will run this code if the IR detects white
 
@@ -157,7 +170,7 @@ double getDistance(int trigPin, int echoPin) {
     delayMicroseconds(10);
     digitalWrite(trigPin, LOW);
     duration = pulseIn(echoPin, HIGH);
-    distance = (duration * 0.0340) / 2;
+    distance = (duration * SPEEDOFSENSOR) / 2; // distance's unit is cm and duration is in ms 
     return distance;
 }
 
@@ -227,7 +240,7 @@ void driveBackwards()
 /   summary: this function turns sumobot to the left
 */
 
-void turnLeft()
+void stationaryTurnLeft()
 {
     Serial.println("Moving left");
 	analogWrite(LEFT_SPEED, MAX_SPEED);
@@ -242,6 +255,30 @@ void turnLeft()
 
 // What other movement functions might we need?
 // TODO: Create some of your own movement functions.
+//TURN RIGHT Function
+void stationaryTurnRight()
+{
+    Serial.println("Moving right");
+	analogWrite(LEFT_SPEED, MAX_SPEED);
+	analogWrite(RIGHT_SPEED, MAX_SPEED);
+
+	digitalWrite(LEFT_F, HIGH);
+	digitalWrite(LEFT_R, LOW);
+	digitalWrite(RIGHT_F, LOW);
+	digitalWrite(RIGHT_R, HIGH);
+}
+
+//Stop function
+void stop() {
+    Serial.println("STOP");
+	analogWrite(LEFT_SPEED, MAX_SPEED);
+	analogWrite(RIGHT_SPEED, MAX_SPEED);
+
+	digitalWrite(LEFT_F, LOW);
+	digitalWrite(LEFT_R, LOW);
+	digitalWrite(RIGHT_F, LOW);
+	digitalWrite(RIGHT_R, LOW);
+}
 
 
 
