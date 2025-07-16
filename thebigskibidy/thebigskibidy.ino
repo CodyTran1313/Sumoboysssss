@@ -11,19 +11,16 @@
 #define echoPin1 3
 #define trigPin1 4
 
-// fk alex
-
 // Infrared sensor pins
 // CHANGE THIS
 #define IRPin 6
+#define sideIRPin 5
 
 // TODO: Define constants/variables for motors (workshop 4)
-// CHANGE THESE
 int RIGHT_SPEED = 10; // Speed pin, ranges from 0 to 255 (ENA)
 int RIGHT_F = 11; // Pin to move motor forwards (IN1)
 int RIGHT_R = 12; // Pin to move motor backwards (IN2)
 
-// CHANGE THESE
 int LEFT_SPEED = 9; // Speed pin, ranges from 0 to 255 (ENB)
 int LEFT_F = 7; // Pin to move motor forwards (IN3)
 int LEFT_R = 8; // Pin to move motor backwards (IN4)
@@ -37,22 +34,20 @@ int LEFT_R = 8; // Pin to move motor backwards (IN4)
 #define SPEEDOFSENSOR 0.0340
 
 // TODO: Initialise more global variables to be used
-int currentState = SEARCHING    ;
+int currentState = SEARCHING;
 
 ////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////// Setup Function /////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
- 
+
 void setup() {
-  // TODO: Set pinmodes for every pin defined above - you will have to determine
-  // whether the pins will be input or output (or you could look at the workshop
-  // slides)
-  pinMode(trigPin1, OUTPUT);
-  pinMode(echoPin1, INPUT);
+
+    pinMode(trigPin1, OUTPUT);
+    pinMode(echoPin1, INPUT);
 
   //Setup serial communication at 9600 baudrate to allow testing for
   // input/output of the sumobot
-  Serial.begin(9600);
+    Serial.begin(9600);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -69,8 +64,19 @@ void loop() {
     //     currentState = SEARCHING;
     // }
 
-    // If the IR doesnt detect white, the bot wil only run this while loop
-    if (checkBorder(IRPin) == 0) {
+    if (checkBorder(IRPin)) {
+        Serial.println("Front White");
+        driveBackwards(MAX_SPEED);
+        delay(100);
+        turnRight(MAX_SPEED);
+        delay(50);
+    } else if (checkBorder(sideIRPin)) {
+        Serial.println("Side White");
+        stationaryTurnRight(MAX_SPEED);
+        delay(50);
+        driveForwards(MAX_SPEED);
+        delay(50);
+    } else {
         // A switch statement allows us to compare a given variable to multiple
         // cases.
         switch (currentState) {
@@ -98,59 +104,34 @@ void loop() {
             
             // If it finds bot, ram at it
             if (getDistance(trigPin1, echoPin1) <= 50) {
-                driveForwards();
+                driveForwards(MAX_SPEED);
 
                 if (getDistance(trigPin1, echoPin1) <= 3) {
 
                 }
             } else {
-                stop
+                stop;
             }
             
-
-            // If the other bot is lost, what should the new currentState be?
+        case WAITING:
             
+            Serial.println("Waiting 5 seconds before starting");
+            delay(5000);
+            currentState = SEARCHING;
         default:
             // This is for if the currentState is neither SEARCHING or ATTACKING
-            
+            driveForwards(MAX_SPEED);
             break;
         }
         // What other states would you need?
 
         delay(250); // Small delay for stability
     }
-
+    Serial.println("End of loop.");
     // The bot will run this code if the IR detects white
 
     // What movement should the bot do in this situation?
     
-}
-
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////// More Functions //////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-
-/*  Function: Example Function
-/   parameters: x, y
-/   returns: distance
-/   summary: this is an example function
-*/
-int exampleFunction(int x, int y) {
-    int distance = x + y; // logic inside the function
-    return distance; // this returns to where the function was called
-}
-
-/*  Function: Example Function 2 (Addition function)
-/   parameters: x, y
-/   returns: true if the sum of x and y is greater than 10, false if not
-*/
-bool add(int x, int y) {
-	int sum = x + y;
-	if (sum > 10) { // Use if statements to check for conditions
-		return true;
-	} else {
-		return false;
-	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -203,11 +184,11 @@ int checkBorder(int irSensorPin) {
 /   returns: none
 /   summary: this function drives sumobot forward
 */
-void driveForwards()
+void driveForwards(int speed)
 {
-  Serial.println("Driving forward");
-	analogWrite(LEFT_SPEED, MAX_SPEED);
-	analogWrite(RIGHT_SPEED, MAX_SPEED);
+Serial.println("Driving forward");
+	analogWrite(LEFT_SPEED, speed);
+	analogWrite(RIGHT_SPEED, speed);
 
 	digitalWrite(LEFT_F, HIGH);
 	digitalWrite(LEFT_R, LOW);
@@ -222,11 +203,11 @@ void driveForwards()
 /   returns: none
 /   summary: this function drives sumobot backwards
 */
-void driveBackwards()
+void driveBackwards(int speed)
 {
     Serial.println("Driving backwards");
-	analogWrite(LEFT_SPEED, MAX_SPEED);
-	analogWrite(RIGHT_SPEED, MAX_SPEED);
+	analogWrite(LEFT_SPEED, speed);
+	analogWrite(RIGHT_SPEED, speed);
 
 	digitalWrite(LEFT_F, LOW);
 	digitalWrite(LEFT_R, HIGH);
@@ -240,11 +221,11 @@ void driveBackwards()
 /   summary: this function turns sumobot to the left
 */
 
-void stationaryTurnLeft()
+void stationaryTurnLeft(int speed)
 {
-    Serial.println("Moving left");
-	analogWrite(LEFT_SPEED, MAX_SPEED);
-	analogWrite(RIGHT_SPEED, MAX_SPEED);
+    Serial.println("Turning left");
+	analogWrite(LEFT_SPEED, speed);
+	analogWrite(RIGHT_SPEED, speed);
 
 	digitalWrite(LEFT_F, LOW);
 	digitalWrite(LEFT_R, HIGH);
@@ -253,14 +234,27 @@ void stationaryTurnLeft()
 }
 
 
+void turnLeft(int speed)
+{
+    Serial.println("Moving left");
+	analogWrite(LEFT_SPEED, speed);
+	analogWrite(RIGHT_SPEED, speed);
+
+	digitalWrite(LEFT_F, LOW);
+	digitalWrite(LEFT_R, LOW);
+	digitalWrite(RIGHT_F, HIGH);
+	digitalWrite(RIGHT_R, LOW);
+}
+
+
 // What other movement functions might we need?
 // TODO: Create some of your own movement functions.
 //TURN RIGHT Function
-void stationaryTurnRight()
+void stationaryTurnRight(int speed)
 {
-    Serial.println("Moving right");
-	analogWrite(LEFT_SPEED, MAX_SPEED);
-	analogWrite(RIGHT_SPEED, MAX_SPEED);
+    Serial.println("Turning right");
+	analogWrite(LEFT_SPEED, speed);
+	analogWrite(RIGHT_SPEED, speed);
 
 	digitalWrite(LEFT_F, HIGH);
 	digitalWrite(LEFT_R, LOW);
@@ -268,11 +262,22 @@ void stationaryTurnRight()
 	digitalWrite(RIGHT_R, HIGH);
 }
 
+void turnRight(int speed)
+{
+    Serial.println("Moving right");
+	analogWrite(LEFT_SPEED, speed);
+	analogWrite(RIGHT_SPEED, speed);
+
+	digitalWrite(LEFT_F, HIGH);
+	digitalWrite(LEFT_R, LOW);
+	digitalWrite(RIGHT_F, LOW);
+	digitalWrite(RIGHT_R, LOW);
+}
+
+
 //Stop function
 void stop() {
     Serial.println("STOP");
-	analogWrite(LEFT_SPEED, MAX_SPEED);
-	analogWrite(RIGHT_SPEED, MAX_SPEED);
 
 	digitalWrite(LEFT_F, LOW);
 	digitalWrite(LEFT_R, LOW);
