@@ -96,7 +96,7 @@ void loop() {
             Serial.println("Distance detected: " + String(distanceDetected) + " cm");
             
             // if another bot is found, what should the new currentState be?
-            
+            currentState = ATTACKING;
         case ATTACKING:
             // TODO: Add code to move forward aggressively towards the
             // detected bot
@@ -112,7 +112,7 @@ void loop() {
             } else {
                 stop;
             }
-            
+            currentState = WAITING;
         case WAITING:
             
             Serial.println("Waiting 5 seconds before starting");
