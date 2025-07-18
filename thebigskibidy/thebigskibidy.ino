@@ -18,12 +18,12 @@
 
 // TODO: Define constants/variables for motors (workshop 4)
 int RIGHT_SPEED = 10; // Speed pin, ranges from 0 to 255 (ENA)
-int RIGHT_F = 11; // Pin to move motor forwards (IN1)
-int RIGHT_R = 12; // Pin to move motor backwards (IN2)
+int RIGHT_F = 12; // Pin to move motor forwards (IN1)
+int RIGHT_R = 11; // Pin to move motor backwards (IN2)
 
 int LEFT_SPEED = 9; // Speed pin, ranges from 0 to 255 (ENB)
-int LEFT_F = 7; // Pin to move motor forwards (IN3)
-int LEFT_R = 8; // Pin to move motor backwards (IN4)
+int LEFT_F = 8; // Pin to move motor forwards (IN3)
+int LEFT_R = 7; // Pin to move motor backwards (IN4)
 
 // TODO: Define other constants to be used in your sumobot
 #define MAX_SPEED 255
