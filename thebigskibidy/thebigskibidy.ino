@@ -28,6 +28,12 @@ int LEFT_R = 7; // Pin to move motor backwards (IN4)
 // TODO: Define other constants to be used in your sumobot
 #define MAX_SPEED 255
 
+//Maximum distance robot can be, 999 for now until I'm told
+#define ROBOT_RANGE 999
+
+//Time it takes to drive around the circle
+#define Circle_time 1000
+
 #define WAITING 0
 #define SEARCHING 1
 #define ATTACKING 2
@@ -57,12 +63,41 @@ void setup() {
 // This function is where all your logic will go. The provided template uses the 
 // 'states model' discussed in week 5's build session.
 void loop() {
-    // Stay in system state WAITING for 5 seconds
-    // if (currentState == WAITING) {
-    //     Serial.println("Waiting 5 seconds before starting");
-    //     delay(5000);
-    //     currentState = SEARCHING;
-    // }
+    //Stay in system state WAITING for 5 seconds
+    if (currentState == WAITING) {
+        Serial.println("Waiting 5 seconds before starting");
+        delay(5000);
+        currentState = SEARCHING;
+    }
+
+    //OK SO IF WE'RE PULLING THAT CIRCLE DRIVING BS
+    double distanceDetected = getDistance(trigPin1, echoPin1);
+    if (distanceDetected <= ROBOT_RANGE) {
+        //seen as we're driving in a circle regardless, we can just note down the position here
+        Serial.println("enemy robot found");
+    }
+
+    //Turning left so we're ready to drive
+    while (checkBorder(IRPin) != 1) {
+        stationaryTurnLeft(MAX_SPEED);
+    }
+
+    //Now I have no fucking clue how to drive around the edge of the circle but I'll just wing it here
+    double startTime = millis();
+    while (millis() <= startTime + Circle_time) {
+        if (checkBorder(IRPin) == 1) {
+            stationaryTurnRight(MAX_SPEED);
+        } else {
+            driveForwards(MAX_SPEED);
+        }
+    }
+
+    //At this point we should (theoretically) be at the other side of the circle, so here we turn around
+    stationaryTurnRight(MAX_SPEED);
+    delay(100);
+    stop();
+
+    //Now we need to start scanning for the robot
 
     if (checkBorder(IRPin)) {
         Serial.println("Front White");
