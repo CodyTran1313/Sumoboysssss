@@ -107,6 +107,7 @@ void loop() {
         delay(50);
     } else if (checkBorder(sideIRPin)) {
         Serial.println("Side White");
+        // ?? WHICH SIDE YOU FUCK, WRITE COMMENTS
         stationaryTurnRight(MAX_SPEED);
         delay(50);
         driveForwards(MAX_SPEED);
@@ -116,56 +117,49 @@ void loop() {
         // cases.
         switch (currentState) {
         case SEARCHING:
-            // TODO: Add code to search for another bot
-            //Hula to find other robot
-            //180, check bot
-            //if not within x range, do 360 turn
-
-            // For now, if you have wired up your bot correctly, this should be
-            // printing out the distance being read from teh
+            //Obtaining the ditance
             double distanceDetected = getDistance(trigPin1, echoPin1);
-
-            // Use println statements to ensure that you code is working properly
-            // String([value]) converts a value to a string, and you can add strings
-            // to each other to combine them into one.
             Serial.println("Distance detected: " + String(distanceDetected) + " cm");
-            
-            // if another bot is found, what should the new currentState be?
-            currentState = ATTACKING;
-        case ATTACKING:
-            // TODO: Add code to move forward aggressively towards the
-            // detected bot
-            
-            
-            // If it finds bot, ram at it
-            if (getDistance(trigPin1, echoPin1) <= 50) {
-                driveForwards(MAX_SPEED);
 
-                if (getDistance(trigPin1, echoPin1) <= 3) {
+            //If/else conditionals based on detection
+            if (distanceDetected <= ROBOT_RANGE) {
+                currentState = ATTACKING;
+            } else if(checkBorder(IRPin) != 1) {
+                // ^^^ pretty sure this won't work because idfk where the IR pin is,
+                // but basically it's meant to be, until it reaches the border turn right
+                // alternatively we should probably do it based on degrees
 
-                }
+                //Turn right first because it's likely the robot will be on our right (as we loop around the left)
+                stationaryTurnRight(MAX_SPEED);
             } else {
-                stop;
+                stationaryTurnLeft(MAX_SPEED);
             }
-            currentState = WAITING;
+        case ATTACKING:
+            // If it finds bot, ram at it
+            if (getDistance(trigPin1, echoPin1) <= ROBOT_RANGE) {
+                driveForwards(MAX_SPEED);
+            } else {
+                currentState = SEARCHING;
+            }
         case WAITING:
-            
-            Serial.println("Waiting 5 seconds before starting");
-            delay(5000);
+            //literally 0 reason to have this case
             currentState = SEARCHING;
         default:
             // This is for if the currentState is neither SEARCHING or ATTACKING
             driveForwards(MAX_SPEED);
             break;
         }
-        // What other states would you need?
+        // What other states would you need? kys whoever wrote this
 
         delay(250); // Small delay for stability
     }
     Serial.println("End of loop.");
     // The bot will run this code if the IR detects white
-
+    //what code ?
     // What movement should the bot do in this situation?
+    //declare victory
+    victorySpins();
+
     
 }
 
@@ -318,6 +312,21 @@ void stop() {
 	digitalWrite(LEFT_R, LOW);
 	digitalWrite(RIGHT_F, LOW);
 	digitalWrite(RIGHT_R, LOW);
+}
+
+//Victory burnout function
+void victorySpins() {
+    Serial.println("Get Clapped Nerds!");
+    digitalWrite(LEFT_F, LOW);
+	digitalWrite(LEFT_R, HIGH);
+	digitalWrite(RIGHT_F, HIGH);
+	digitalWrite(RIGHT_R, LOW);
+    delay(2000);
+    digitalWrite(LEFT_F, HIGH);
+	digitalWrite(LEFT_R, LOW);
+	digitalWrite(RIGHT_F, LOW);
+	digitalWrite(RIGHT_R, HIGH);
+    delay(2000);
 }
 
 
