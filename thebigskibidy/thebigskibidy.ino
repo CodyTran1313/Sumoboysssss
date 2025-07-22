@@ -11,25 +11,28 @@
 #define echoPin1 3
 #define trigPin1 4
 
-// fk alex
-
 // Infrared sensor pins
 // CHANGE THIS
 #define IRPin 6
+#define sideIRPin 5
 
 // TODO: Define constants/variables for motors (workshop 4)
-// CHANGE THESE
 int RIGHT_SPEED = 10; // Speed pin, ranges from 0 to 255 (ENA)
-int RIGHT_F = 11; // Pin to move motor forwards (IN1)
-int RIGHT_R = 12; // Pin to move motor backwards (IN2)
+int RIGHT_F = 12; // Pin to move motor forwards (IN1)
+int RIGHT_R = 11; // Pin to move motor backwards (IN2)
 
-// CHANGE THESE
 int LEFT_SPEED = 9; // Speed pin, ranges from 0 to 255 (ENB)
-int LEFT_F = 7; // Pin to move motor forwards (IN3)
-int LEFT_R = 8; // Pin to move motor backwards (IN4)
+int LEFT_F = 8; // Pin to move motor forwards (IN3)
+int LEFT_R = 7; // Pin to move motor backwards (IN4)
 
 // TODO: Define other constants to be used in your sumobot
 #define MAX_SPEED 255
+
+//Maximum distance robot can be, 999 for now until I'm told
+#define ROBOT_RANGE 999
+
+//Time it takes to drive around the circle
+#define Circle_time 1000
 
 #define WAITING 0
 #define SEARCHING 1
@@ -37,22 +40,20 @@ int LEFT_R = 8; // Pin to move motor backwards (IN4)
 #define SPEEDOFSENSOR 0.0340
 
 // TODO: Initialise more global variables to be used
-int currentState = SEARCHING    ;
+int currentState = SEARCHING;
 
 ////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////// Setup Function /////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
- 
+
 void setup() {
-  // TODO: Set pinmodes for every pin defined above - you will have to determine
-  // whether the pins will be input or output (or you could look at the workshop
-  // slides)
-  pinMode(trigPin1, OUTPUT);
-  pinMode(echoPin1, INPUT);
+
+    pinMode(trigPin1, OUTPUT);
+    pinMode(echoPin1, INPUT);
 
   //Setup serial communication at 9600 baudrate to allow testing for
   // input/output of the sumobot
-  Serial.begin(9600);
+    Serial.begin(9600);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -62,95 +63,104 @@ void setup() {
 // This function is where all your logic will go. The provided template uses the 
 // 'states model' discussed in week 5's build session.
 void loop() {
-    // Stay in system state WAITING for 5 seconds
-    // if (currentState == WAITING) {
-    //     Serial.println("Waiting 5 seconds before starting");
-    //     delay(5000);
-    //     currentState = SEARCHING;
-    // }
+    //Stay in system state WAITING for 5 seconds
+    if (currentState == WAITING) {
+        Serial.println("Waiting 5 seconds before starting");
+        delay(5000);
+        currentState = SEARCHING;
+    }
 
-    // If the IR doesnt detect white, the bot wil only run this while loop
-    if (checkBorder(IRPin) == 0) {
+    //OK SO IF WE'RE PULLING THAT CIRCLE DRIVING BS
+    double distanceDetected = getDistance(trigPin1, echoPin1);
+    if (distanceDetected <= ROBOT_RANGE) {
+        //seen as we're driving in a circle regardless, we can just note down the position here
+        Serial.println("enemy robot found");
+    }
+
+    //Turning left so we're ready to drive
+    while (checkBorder(IRPin) != 1) {
+        stationaryTurnLeft(MAX_SPEED);
+    }
+
+    //Now I have no fucking clue how to drive around the edge of the circle but I'll just wing it here
+    double startTime = millis();
+    while (millis() <= startTime + Circle_time) {
+        if (checkBorder(IRPin) == 1) {
+            stationaryTurnRight(MAX_SPEED);
+        } else {
+            driveForwards(MAX_SPEED);
+        }
+    }
+
+    //At this point we should (theoretically) be at the other side of the circle, so here we turn around
+    stationaryTurnRight(MAX_SPEED);
+    delay(100);
+    stop();
+
+    //Now we need to start scanning for the robot
+
+    if (checkBorder(IRPin)) {
+        Serial.println("Front White");
+        driveBackwards(MAX_SPEED);
+        delay(100);
+        turnRight(MAX_SPEED);
+        delay(50);
+    } else if (checkBorder(sideIRPin)) {
+        Serial.println("Side White");
+        // ?? WHICH SIDE YOU FUCK, WRITE COMMENTS
+        stationaryTurnRight(MAX_SPEED);
+        delay(50);
+        driveForwards(MAX_SPEED);
+        delay(50);
+    } else {
         // A switch statement allows us to compare a given variable to multiple
         // cases.
         switch (currentState) {
         case SEARCHING:
-            // TODO: Add code to search for another bot
-            //Hula to find other robot
-            //180, check bot
-            //if not within x range, do 360 turn
-
-            // For now, if you have wired up your bot correctly, this should be
-            // printing out the distance being read from teh
+            //Obtaining the ditance
             double distanceDetected = getDistance(trigPin1, echoPin1);
-
-            // Use println statements to ensure that you code is working properly
-            // String([value]) converts a value to a string, and you can add strings
-            // to each other to combine them into one.
             Serial.println("Distance detected: " + String(distanceDetected) + " cm");
-            
-            // if another bot is found, what should the new currentState be?
-            
-        case ATTACKING:
-            // TODO: Add code to move forward aggressively towards the
-            // detected bot
-            
-            
-            // If it finds bot, ram at it
-            if (getDistance(trigPin1, echoPin1) <= 50) {
-                driveForwards();
 
-                if (getDistance(trigPin1, echoPin1) <= 3) {
+            //If/else conditionals based on detection
+            if (distanceDetected <= ROBOT_RANGE) {
+                currentState = ATTACKING;
+            } else if(checkBorder(IRPin) != 1) {
+                // ^^^ pretty sure this won't work because idfk where the IR pin is,
+                // but basically it's meant to be, until it reaches the border turn right
+                // alternatively we should probably do it based on degrees
 
-                }
+                //Turn right first because it's likely the robot will be on our right (as we loop around the left)
+                stationaryTurnRight(MAX_SPEED);
             } else {
-                stop
+                stationaryTurnLeft(MAX_SPEED);
             }
-            
-
-            // If the other bot is lost, what should the new currentState be?
-            
+        case ATTACKING:
+            // If it finds bot, ram at it
+            if (getDistance(trigPin1, echoPin1) <= ROBOT_RANGE) {
+                driveForwards(MAX_SPEED);
+            } else {
+                currentState = SEARCHING;
+            }
+        case WAITING:
+            //literally 0 reason to have this case
+            currentState = SEARCHING;
         default:
             // This is for if the currentState is neither SEARCHING or ATTACKING
-            
+            driveForwards(MAX_SPEED);
             break;
         }
-        // What other states would you need?
+        // What other states would you need? kys whoever wrote this
 
         delay(250); // Small delay for stability
     }
-
+    Serial.println("End of loop.");
     // The bot will run this code if the IR detects white
-
+    //what code ?
     // What movement should the bot do in this situation?
+    //declare victory
+    victorySpins();
+
     
-}
-
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////// More Functions //////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-
-/*  Function: Example Function
-/   parameters: x, y
-/   returns: distance
-/   summary: this is an example function
-*/
-int exampleFunction(int x, int y) {
-    int distance = x + y; // logic inside the function
-    return distance; // this returns to where the function was called
-}
-
-/*  Function: Example Function 2 (Addition function)
-/   parameters: x, y
-/   returns: true if the sum of x and y is greater than 10, false if not
-*/
-bool add(int x, int y) {
-	int sum = x + y;
-	if (sum > 10) { // Use if statements to check for conditions
-		return true;
-	} else {
-		return false;
-	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -203,11 +213,11 @@ int checkBorder(int irSensorPin) {
 /   returns: none
 /   summary: this function drives sumobot forward
 */
-void driveForwards()
+void driveForwards(int speed)
 {
-  Serial.println("Driving forward");
-	analogWrite(LEFT_SPEED, MAX_SPEED);
-	analogWrite(RIGHT_SPEED, MAX_SPEED);
+Serial.println("Driving forward");
+	analogWrite(LEFT_SPEED, speed);
+	analogWrite(RIGHT_SPEED, speed);
 
 	digitalWrite(LEFT_F, HIGH);
 	digitalWrite(LEFT_R, LOW);
@@ -222,11 +232,11 @@ void driveForwards()
 /   returns: none
 /   summary: this function drives sumobot backwards
 */
-void driveBackwards()
+void driveBackwards(int speed)
 {
     Serial.println("Driving backwards");
-	analogWrite(LEFT_SPEED, MAX_SPEED);
-	analogWrite(RIGHT_SPEED, MAX_SPEED);
+	analogWrite(LEFT_SPEED, speed);
+	analogWrite(RIGHT_SPEED, speed);
 
 	digitalWrite(LEFT_F, LOW);
 	digitalWrite(LEFT_R, HIGH);
@@ -240,11 +250,11 @@ void driveBackwards()
 /   summary: this function turns sumobot to the left
 */
 
-void stationaryTurnLeft()
+void stationaryTurnLeft(int speed)
 {
-    Serial.println("Moving left");
-	analogWrite(LEFT_SPEED, MAX_SPEED);
-	analogWrite(RIGHT_SPEED, MAX_SPEED);
+    Serial.println("Turning left");
+	analogWrite(LEFT_SPEED, speed);
+	analogWrite(RIGHT_SPEED, speed);
 
 	digitalWrite(LEFT_F, LOW);
 	digitalWrite(LEFT_R, HIGH);
@@ -253,14 +263,27 @@ void stationaryTurnLeft()
 }
 
 
+void turnLeft(int speed)
+{
+    Serial.println("Moving left");
+	analogWrite(LEFT_SPEED, speed);
+	analogWrite(RIGHT_SPEED, speed);
+
+	digitalWrite(LEFT_F, LOW);
+	digitalWrite(LEFT_R, LOW);
+	digitalWrite(RIGHT_F, HIGH);
+	digitalWrite(RIGHT_R, LOW);
+}
+
+
 // What other movement functions might we need?
 // TODO: Create some of your own movement functions.
 //TURN RIGHT Function
-void stationaryTurnRight()
+void stationaryTurnRight(int speed)
 {
-    Serial.println("Moving right");
-	analogWrite(LEFT_SPEED, MAX_SPEED);
-	analogWrite(RIGHT_SPEED, MAX_SPEED);
+    Serial.println("Turning right");
+	analogWrite(LEFT_SPEED, speed);
+	analogWrite(RIGHT_SPEED, speed);
 
 	digitalWrite(LEFT_F, HIGH);
 	digitalWrite(LEFT_R, LOW);
@@ -268,11 +291,22 @@ void stationaryTurnRight()
 	digitalWrite(RIGHT_R, HIGH);
 }
 
+void turnRight(int speed)
+{
+    Serial.println("Moving right");
+	analogWrite(LEFT_SPEED, speed);
+	analogWrite(RIGHT_SPEED, speed);
+
+	digitalWrite(LEFT_F, HIGH);
+	digitalWrite(LEFT_R, LOW);
+	digitalWrite(RIGHT_F, LOW);
+	digitalWrite(RIGHT_R, LOW);
+}
+
+
 //Stop function
 void stop() {
     Serial.println("STOP");
-	analogWrite(LEFT_SPEED, MAX_SPEED);
-	analogWrite(RIGHT_SPEED, MAX_SPEED);
 
 	digitalWrite(LEFT_F, LOW);
 	digitalWrite(LEFT_R, LOW);
@@ -280,8 +314,39 @@ void stop() {
 	digitalWrite(RIGHT_R, LOW);
 }
 
-
+//Victory burnout function
+void victorySpins() {
+    Serial.println("Get Clapped Nerds!");
+    digitalWrite(LEFT_F, LOW);
+	digitalWrite(LEFT_R, HIGH);
+	digitalWrite(RIGHT_F, HIGH);
+	digitalWrite(RIGHT_R, LOW);
+    delay(2000);
+    digitalWrite(LEFT_F, HIGH);
+	digitalWrite(LEFT_R, LOW);
+	digitalWrite(RIGHT_F, LOW);
+	digitalWrite(RIGHT_R, HIGH);
+    delay(2000);
+}
 
 
 // Don't forget to ask questions on the DISCORD if you need any help!
+
+void startRight(){  
+    Serial.println("Doing the starting right turn")
+	analogWrite(LEFT_SPEED, MAX_SPEED); 
+    \\ proll do a different speed than max_speed to change turning radius
+    \\but will need to actually run to check
+	
+    \\ power the left wheel, don't power the right to curve right
+    digitalWrite(LEFT_F, HIGH);
+	digitalWrite(LEFT_R, LOW);
+
+    \\ once the edge is reached (side ir detects white), follow the curve of the ring until some point
+
+    \\ start searching
+}
+
+
+
 
