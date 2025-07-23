@@ -325,14 +325,9 @@ void stop() {
 //Victory burnout function
 void victorySpins() {
     Serial.println("Get Clapped Nerds!");
-    digitalWrite(LEFT_F, LOW);
-    digitalWrite(LEFT_R, HIGH);
-    digitalWrite(RIGHT_F, HIGH);
-    digitalWrite(RIGHT_R, LOW);
+    stationaryTurnLeft();
     delay(2000);
-    digitalWrite(LEFT_F, HIGH);
-    digitalWrite(LEFT_R, LOW);
-    digitalWrite(RIGHT_F, LOW);
-    digitalWrite(RIGHT_R, HIGH);
+    stationaryTurnRight();
     delay(2000);
+
 }
