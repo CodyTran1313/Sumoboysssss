@@ -28,22 +28,18 @@ int LEFT_R = 8; // Pin to move motor backwards (IN4)
 int RIGHT_CHECK = 1; //Checking right first
 
 // TODO: Define other constants to be used in your sumobot
-#define MAX_SPEED 128
-#define PARTIAL_SPEED 40
+#define MAX_SPEED 255
 
 //Maximum distance robot can be, 999 for now until I'm told
 #define ROBOT_RANGE 120
 
 //Time it takes to drive around the circle
-#define Circle_time 3000
+#define Circle_time 1000
 
 #define WAITING 0
 #define SEARCHING 1
 #define ATTACKING 2
 #define SPEEDOFSENSOR 0.0340
-
-//Time to turn 90 degrees
-#define turn90 600
 
 // TODO: Initialise more global variables to be used
 int currentState = SEARCHING;
@@ -98,11 +94,10 @@ void loop() {
         Serial.println("Front White");
         driveBackwards(MAX_SPEED);
         delay(100);
-        turnRight(MAX_SPEED);
+        stationaryTurnRight(MAX_SPEED);
         delay(50);
     } else if (checkBorder(sideIRPin)) {
         Serial.println("Side White");
-        // ?? WHICH SIDE YOU FUCK, WRITE COMMENTS
         stationaryTurnRight(MAX_SPEED);
         delay(50);
         driveForwards(MAX_SPEED);
@@ -126,13 +121,13 @@ void loop() {
                 RIGHT_CHECK = 0;
             } else {
                 stationaryTurnLeft(MAX_SPEED);
-                delay(turn90);
-                RIGHT_CHECK = 1;
             }
         case ATTACKING:
             // If it finds bot, ram at it
             if (getDistance(trigPin1, echoPin1) <= ROBOT_RANGE) {
                 driveForwards(MAX_SPEED);
+            } else if (checkBorder(IRPin) == 1 && getDistance(trigPin1, echoPin1) <= ROBOT_RANGE) {
+                victorySpins();
             } else {
                 currentState = SEARCHING;
             }
@@ -191,7 +186,6 @@ double getDistance(int trigPin, int echoPin) {
 int checkBorder(int irSensorPin) {
 	int statusSensor = digitalRead(irSensorPin);
 	if (statusSensor == HIGH) {
-        Serial.println("Detected 1");
 		return 1;
 	} else {
 		return 0;
@@ -213,13 +207,13 @@ int checkBorder(int irSensorPin) {
 void driveForwards(int speed)
 {
 Serial.println("Driving forward");
-	analogWrite(LEFT_SPEED, speed);
-	analogWrite(RIGHT_SPEED, speed);
+    analogWrite(LEFT_SPEED, speed);
+    analogWrite(RIGHT_SPEED, speed);
 
-	digitalWrite(LEFT_F, HIGH);
-	digitalWrite(LEFT_R, LOW);
-	digitalWrite(RIGHT_F, HIGH);
-	digitalWrite(RIGHT_R, LOW);
+    digitalWrite(LEFT_F, HIGH);
+    digitalWrite(LEFT_R, LOW);
+    digitalWrite(RIGHT_F, HIGH);
+    digitalWrite(RIGHT_R, LOW);
 }
 // ADDITIONAL: How can we change the above function to all the sumobot to move
 // forward at a variable speed? HINT: Modify the analogWrite functions
@@ -232,13 +226,13 @@ Serial.println("Driving forward");
 void driveBackwards(int speed)
 {
     Serial.println("Driving backwards");
-	analogWrite(LEFT_SPEED, speed);
-	analogWrite(RIGHT_SPEED, speed);
+    analogWrite(LEFT_SPEED, speed);
+    analogWrite(RIGHT_SPEED, speed);
 
-	digitalWrite(LEFT_F, LOW);
-	digitalWrite(LEFT_R, HIGH);
-	digitalWrite(RIGHT_F, LOW);
-	digitalWrite(RIGHT_R, HIGH);
+    digitalWrite(LEFT_F, LOW);
+    digitalWrite(LEFT_R, HIGH);
+    digitalWrite(RIGHT_F, LOW);
+    digitalWrite(RIGHT_R, HIGH);
 }
 
 /*  Function: Turn left
@@ -247,29 +241,30 @@ void driveBackwards(int speed)
 /   summary: this function turns sumobot to the left
 */
 
+//Turn left in place
 void stationaryTurnLeft(int speed)
 {
     Serial.println("Turning left");
-	analogWrite(LEFT_SPEED, speed);
-	analogWrite(RIGHT_SPEED, speed);
+    analogWrite(LEFT_SPEED, speed);
+    analogWrite(RIGHT_SPEED, speed);
 
-	digitalWrite(LEFT_F, LOW);
-	digitalWrite(LEFT_R, HIGH);
-	digitalWrite(RIGHT_F, HIGH);
-	digitalWrite(RIGHT_R, LOW);
+    digitalWrite(LEFT_F, LOW);
+    digitalWrite(LEFT_R, HIGH);
+    digitalWrite(RIGHT_F, HIGH);
+    digitalWrite(RIGHT_R, LOW);
 }
 
-
+//Turn left with an arc
 void turnLeft(int speed)
 {
     Serial.println("Moving left");
-	analogWrite(LEFT_SPEED, speed);
-	analogWrite(RIGHT_SPEED, speed);
+    analogWrite(LEFT_SPEED, speed);
+    analogWrite(RIGHT_SPEED, speed);
 
-	digitalWrite(LEFT_F, LOW);
-	digitalWrite(LEFT_R, LOW);
-	digitalWrite(RIGHT_F, HIGH);
-	digitalWrite(RIGHT_R, LOW);
+    digitalWrite(LEFT_F, LOW);
+    digitalWrite(LEFT_R, LOW);
+    digitalWrite(RIGHT_F, HIGH);
+    digitalWrite(RIGHT_R, LOW);
 }
 
 
@@ -279,38 +274,25 @@ void turnLeft(int speed)
 void stationaryTurnRight(int speed)
 {
     Serial.println("Turning right");
-	analogWrite(LEFT_SPEED, speed);
-	analogWrite(RIGHT_SPEED, speed);
+    analogWrite(LEFT_SPEED, speed);
+    analogWrite(RIGHT_SPEED, speed);
 
-	digitalWrite(LEFT_F, HIGH);
-	digitalWrite(LEFT_R, LOW);
-	digitalWrite(RIGHT_F, LOW);
-	digitalWrite(RIGHT_R, HIGH);
+    digitalWrite(LEFT_F, HIGH);
+    digitalWrite(LEFT_R, LOW);
+    digitalWrite(RIGHT_F, LOW);
+    digitalWrite(RIGHT_R, HIGH);
 }
 
 void turnRight(int speed)
 {
     Serial.println("Moving right");
-	analogWrite(LEFT_SPEED, speed);
-	analogWrite(RIGHT_SPEED, speed);
+    analogWrite(LEFT_SPEED, speed);
+    analogWrite(RIGHT_SPEED, speed);
 
-	digitalWrite(LEFT_F, HIGH);
-	digitalWrite(LEFT_R, LOW);
-	digitalWrite(RIGHT_F, LOW);
-	digitalWrite(RIGHT_R, LOW);
-}
-
-//Turn right slightly
-void turnRightSlight(int speed, int halfSpeed)
-{
-    Serial.println("Moving right");
-	analogWrite(LEFT_SPEED, halfSpeed);
-	analogWrite(RIGHT_SPEED, speed);
-
-	digitalWrite(LEFT_F, HIGH);
-	digitalWrite(LEFT_R, LOW);
-	digitalWrite(RIGHT_F, HIGH);
-	digitalWrite(RIGHT_R, LOW);
+    digitalWrite(LEFT_F, HIGH);
+    digitalWrite(LEFT_R, LOW);
+    digitalWrite(RIGHT_F, LOW);
+    digitalWrite(RIGHT_R, LOW);
 }
 
 
@@ -318,46 +300,23 @@ void turnRightSlight(int speed, int halfSpeed)
 void stop() {
     Serial.println("STOP");
 
-	digitalWrite(LEFT_F, LOW);
-	digitalWrite(LEFT_R, LOW);
-	digitalWrite(RIGHT_F, LOW);
-	digitalWrite(RIGHT_R, LOW);
+    digitalWrite(LEFT_F, LOW);
+    digitalWrite(LEFT_R, LOW);
+    digitalWrite(RIGHT_F, LOW);
+    digitalWrite(RIGHT_R, LOW);
 }
 
 //Victory burnout function
 void victorySpins() {
     Serial.println("Get Clapped Nerds!");
-    digitalWrite(LEFT_F, LOW);
-	digitalWrite(LEFT_R, HIGH);
-	digitalWrite(RIGHT_F, HIGH);
-	digitalWrite(RIGHT_R, LOW);
+    stationaryTurnLeft();
     delay(2000);
-    digitalWrite(LEFT_F, HIGH);
-	digitalWrite(LEFT_R, LOW);
-	digitalWrite(RIGHT_F, LOW);
-	digitalWrite(RIGHT_R, HIGH);
+    stationaryTurnRight();
     delay(2000);
 }
+
 
 
 
 // Don't forget to ask questions on the DISCORD if you need any help!
-
-void startRight(){  
-    Serial.println("Doing the starting right turn");
-	analogWrite(LEFT_SPEED, MAX_SPEED); 
-    // proll do a different speed than max_speed to change turning radius
-    //but will need to actually run to check
-	
-    // power the left wheel, don't power the right to curve right
-    digitalWrite(LEFT_F, HIGH);
-	digitalWrite(LEFT_R, LOW);
-
-    // once the edge is reached (side ir detects white), follow the curve of the ring until some point
-
-    // start searching
-}
-
-
-
 
