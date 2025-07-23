@@ -28,18 +28,22 @@ int LEFT_R = 8; // Pin to move motor backwards (IN4)
 int RIGHT_CHECK = 1; //Checking right first
 
 // TODO: Define other constants to be used in your sumobot
-#define MAX_SPEED 255
+#define MAX_SPEED 256
+#define PARTIAL_SPEED 90
 
 //Maximum distance robot can be, 999 for now until I'm told
 #define ROBOT_RANGE 120
 
 //Time it takes to drive around the circle
-#define Circle_time 1000
+#define Circle_time 1500
 
 #define WAITING 0
 #define SEARCHING 1
 #define ATTACKING 2
 #define SPEEDOFSENSOR 0.0340
+
+//Time to turn 90 degrees
+#define turn90 300
 
 // TODO: Initialise more global variables to be used
 int currentState = SEARCHING;
@@ -65,7 +69,6 @@ void setup() {
 // This function is where all your logic will go. The provided template uses the 
 // 'states model' discussed in week 5's build session.
 void loop() {
-
     //Stay in system state WAITING for 5 seconds
     if (currentState == WAITING) {
         Serial.println("Waiting 5 seconds before starting");
@@ -83,10 +86,6 @@ void loop() {
     stationaryTurnRight(MAX_SPEED);
     delay(turn90);
     stop();
-
-    //REMOVE THIS
-    victorySpins();
-    delay(2000);
 
     //Now we need to start scanning for the robot
 
@@ -121,18 +120,21 @@ void loop() {
                 RIGHT_CHECK = 0;
             } else {
                 stationaryTurnLeft(MAX_SPEED);
+                delay(turn90 + turn90);
+                RIGHT_CHECK = 1;
             }
         case ATTACKING:
             // If it finds bot, ram at it
             if (getDistance(trigPin1, echoPin1) <= ROBOT_RANGE) {
                 driveForwards(MAX_SPEED);
             } else if (checkBorder(IRPin) == 1 && getDistance(trigPin1, echoPin1) <= ROBOT_RANGE) {
-                victorySpins();
+                currentState = WAITING:
             } else {
                 currentState = SEARCHING;
             }
         case WAITING:
-            //literally 0 reason to have this case
+            victorySpins();
+            delay(10000);
             currentState = SEARCHING;
         default:
             // This is for if the currentState is neither SEARCHING or ATTACKING
@@ -149,8 +151,6 @@ void loop() {
     // What movement should the bot do in this situation?
     //declare victory
     victorySpins();
-
-    
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -184,12 +184,13 @@ double getDistance(int trigPin, int echoPin) {
 /   summary: uses IR sensor to detect edge of arena
 */
 int checkBorder(int irSensorPin) {
-	int statusSensor = digitalRead(irSensorPin);
-	if (statusSensor == HIGH) {
-		return 1;
-	} else {
-		return 0;
-	}
+    int statusSensor = digitalRead(irSensorPin);
+    if (statusSensor == HIGH) {
+        Serial.println("Detected 1");
+        return 1;
+    } else {
+        return 0;
+    }
 }
 
 // What if you have more than 1 ultrasonic or infrared sensor? Do you need more
@@ -295,6 +296,19 @@ void turnRight(int speed)
     digitalWrite(RIGHT_R, LOW);
 }
 
+//Turn right slightly
+void turnRightSlight(int speed, int halfSpeed)
+{
+    Serial.println("Moving right");
+    analogWrite(LEFT_SPEED, halfSpeed);
+    analogWrite(RIGHT_SPEED, speed);
+
+    digitalWrite(LEFT_F, HIGH);
+    digitalWrite(LEFT_R, LOW);
+    digitalWrite(RIGHT_F, HIGH);
+    digitalWrite(RIGHT_R, LOW);
+}
+
 
 //Stop function
 void stop() {
@@ -306,17 +320,17 @@ void stop() {
     digitalWrite(RIGHT_R, LOW);
 }
 
-//Victory burnout function
+//Victory spin function
 void victorySpins() {
     Serial.println("Get Clapped Nerds!");
-    stationaryTurnLeft();
+    digitalWrite(LEFT_F, LOW);
+    digitalWrite(LEFT_R, HIGH);
+    digitalWrite(RIGHT_F, HIGH);
+    digitalWrite(RIGHT_R, LOW);
     delay(2000);
-    stationaryTurnRight();
+    digitalWrite(LEFT_F, HIGH);
+    digitalWrite(LEFT_R, LOW);
+    digitalWrite(RIGHT_F, LOW);
+    digitalWrite(RIGHT_R, HIGH);
     delay(2000);
 }
-
-
-
-
-// Don't forget to ask questions on the DISCORD if you need any help!
-
