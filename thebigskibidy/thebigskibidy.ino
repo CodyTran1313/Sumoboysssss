@@ -28,8 +28,8 @@ int LEFT_R = 8; // Pin to move motor backwards (IN4)
 int RIGHT_CHECK = 1; //Checking right first
 
 // TODO: Define other constants to be used in your sumobot
-#define MAX_SPEED 256
-#define PARTIAL_SPEED 90
+#define MAX_SPEED 255
+#define PARTIAL_SPEED 30
 
 //Maximum distance robot can be, 999 for now until I'm told
 #define ROBOT_RANGE 120
@@ -76,7 +76,17 @@ void loop() {
         currentState = SEARCHING;
     }
 
-    //Drive in a loop for x amount of time, should end up at the edge of the circle
+    //Drive forwards to the edge of the circle
+    while (checkBorder(IRPin) != 1) {
+        driveForwards(MAX_SPEED);
+    }
+
+    //Turn hard right, should theoretically be 90 degrees
+    stationaryTurnRight(MAX_SPEED);
+    delay(turn90);
+    stop();
+
+    //Drives around the circumference of the circle until it's in the appropriate position
     double startTime = millis();
     while (millis() <= startTime + Circle_time) {
         turnRightSlight(MAX_SPEED, PARTIAL_SPEED);
@@ -128,11 +138,12 @@ void loop() {
             if (getDistance(trigPin1, echoPin1) <= ROBOT_RANGE) {
                 driveForwards(MAX_SPEED);
             } else if (checkBorder(IRPin) == 1 && getDistance(trigPin1, echoPin1) <= ROBOT_RANGE) {
-                currentState = WAITING:
+                currentState = WAITING;
             } else {
                 currentState = SEARCHING;
             }
         case WAITING:
+            currentState = WAITING; //temporary
             victorySpins();
             delay(10000);
             currentState = SEARCHING;
@@ -150,7 +161,6 @@ void loop() {
     //what code ?
     // What movement should the bot do in this situation?
     //declare victory
-    victorySpins();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
