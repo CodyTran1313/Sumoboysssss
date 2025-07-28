@@ -69,7 +69,9 @@ void setup() {
         delay(2000); //REMEMBER TO CHANGE BACK TO 5 SECS
         currentState = SEARCHING;
     }
-
+    //Get close but not over the edge
+    driveForwards(PARTIAL_SPEED);
+    delay(50);
     //Drive forwards to the edge of the circle
     while (checkBorder(IRPin) != 1) {
         driveForwards(BEGINNING_SPEED);
@@ -161,7 +163,6 @@ void loop() {
                 driveForwards(MAX_SPEED);
                 break;
             }
-            // What other states would you need? kys whoever wrote this
 
         delay(250); // Small delay for stability
     // }
