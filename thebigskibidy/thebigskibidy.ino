@@ -128,15 +128,17 @@ void loop() {
                 } else if(i < 15) {
                     //Turn right first because it's likely the robot will be on our right (as we loop around the left)
                     stationaryTurnRight(MAX_SPEED);
+                    i++;
                 } else {
                     stationaryTurnLeft(MAX_SPEED);
                     if (i == 45) {
-                        i = 0;
+                        i = -15;
                     }
+                    i++;
                 }
                 delay(50);
             }
-            
+
         case ATTACKING:
             // If it finds bot, ram at it
             if (getDistance(trigPin1, echoPin1) <= ROBOT_RANGE) {
