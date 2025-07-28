@@ -117,23 +117,26 @@ void loop() {
         // cases.
         switch (currentState) {
         case SEARCHING:
-            //Obtaining the ditance
-            double distanceDetected = getDistance(trigPin1, echoPin1);
-            Serial.println("Distance detected: " + String(distanceDetected) + " cm");
+            int i = 0;
+            while (currentState == SEARCHING) {
+                double distanceDetected = getDistance(trigPin1, echoPin1);
+                Serial.println("Distance detected: " + String(distanceDetected) + " cm");
 
-            //If/else conditionals based on detection
-            if (distanceDetected <= ROBOT_RANGE) {
-                currentState = ATTACKING;
-            } else if(RIGHT_CHECK == 1) {
-                //Turn right first because it's likely the robot will be on our right (as we loop around the left)
-                stationaryTurnRight(MAX_SPEED);
-                delay(turn90);
-                RIGHT_CHECK = 0;
-            } else {
-                stationaryTurnLeft(MAX_SPEED);
-                delay(turn90 + turn90);
-                RIGHT_CHECK = 1;
+                //If/else conditionals based on detection
+                if (distanceDetected <= ROBOT_RANGE) {
+                    currentState = ATTACKING;
+                } else if(i < 15) {
+                    //Turn right first because it's likely the robot will be on our right (as we loop around the left)
+                    stationaryTurnRight(MAX_SPEED);
+                } else {
+                    stationaryTurnLeft(MAX_SPEED);
+                    if (i == 45) {
+                        i = 0;
+                    }
+                }
+                delay(50);
             }
+            
         case ATTACKING:
             // If it finds bot, ram at it
             if (getDistance(trigPin1, echoPin1) <= ROBOT_RANGE) {
