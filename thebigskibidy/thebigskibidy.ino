@@ -18,24 +18,24 @@
 
 // TODO: Define constants/variables for motors (workshop 4)
 int RIGHT_SPEED = 10; // Speed pin, ranges from 0 to 255 (ENA)
-int RIGHT_F = 11; // Pin to move motor forwards (IN1)
-int RIGHT_R = 12; // Pin to move motor backwards (IN2)
+int RIGHT_F = 7; // Pin to move motor forwards (IN1)
+int RIGHT_R = 8; // Pin to move motor backwards (IN2)
 
 int LEFT_SPEED = 9; // Speed pin, ranges from 0 to 255 (ENB)
-int LEFT_F = 7; // Pin to move motor forwards (IN3)
-int LEFT_R = 8; // Pin to move motor backwards (IN4)
+int LEFT_F = 11; // Pin to move motor forwards (IN3)
+int LEFT_R = 12; // Pin to move motor backwards (IN4)
 
 int RIGHT_CHECK = 1; //Checking right first
 
 // TODO: Define other constants to be used in your sumobot
 #define MAX_SPEED 255
-#define PARTIAL_SPEED 30
+#define PARTIAL_SPEED 85
 
 //Maximum distance robot can be, 999 for now until I'm told
 #define ROBOT_RANGE 120
 
 //Time it takes to drive around the circle
-#define Circle_time 1500
+#define Circle_time 3400
 
 #define WAITING 0
 #define SEARCHING 1
@@ -43,36 +43,28 @@ int RIGHT_CHECK = 1; //Checking right first
 #define SPEEDOFSENSOR 0.0340
 
 //Time to turn 90 degrees
-#define turn90 300
+#define turn90 250
 
 // TODO: Initialise more global variables to be used
-int currentState = SEARCHING;
+int currentState = WAITING;
 
 ////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////// Setup Function /////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
 void setup() {
-
     pinMode(trigPin1, OUTPUT);
     pinMode(echoPin1, INPUT);
 
   //Setup serial communication at 9600 baudrate to allow testing for
   // input/output of the sumobot
     Serial.begin(9600);
-}
 
-////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////// Loop Function /////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-
-// This function is where all your logic will go. The provided template uses the 
-// 'states model' discussed in week 5's build session.
-void loop() {
-    //Stay in system state WAITING for 5 seconds
+  //TEST IF ONE TIME WORKS
+  //Stay in system state WAITING for 5 seconds
     if (currentState == WAITING) {
         Serial.println("Waiting 5 seconds before starting");
-        delay(5000);
+        delay(2000); //REMEMBER TO CHANGE BACK TO 5 SECS
         currentState = SEARCHING;
     }
 
@@ -94,9 +86,18 @@ void loop() {
 
     //At this point we should be at the edge of the cirlce, turn right 90 degrees so we're facing the centre
     stationaryTurnRight(MAX_SPEED);
-    delay(turn90);
+    delay(turn90); // TODO
     stop();
 
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////// Loop Function /////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+// This function is where all your logic will go. The provided template uses the 
+// 'states model' discussed in week 5's build session.
+void loop() {
     //Now we need to start scanning for the robot
 
     if (checkBorder(IRPin)) {
@@ -143,8 +144,8 @@ void loop() {
                 currentState = SEARCHING;
             }
         case WAITING:
-            currentState = WAITING; //temporary
-            victorySpins();
+            // victorySpins();
+            stop();
             delay(10000);
             currentState = SEARCHING;
         default:
