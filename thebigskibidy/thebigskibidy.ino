@@ -29,10 +29,12 @@ int RIGHT_CHECK = 1; //Checking right first
 
 // TODO: Define other constants to be used in your sumobot
 #define MAX_SPEED 255
-#define PARTIAL_SPEED 85
+#define PARTIAL_SPEED 84
+#define SP_SPEED 55
+#define BEGINNING_SPEED 65
 
 //Maximum distance robot can be, 999 for now until I'm told
-#define ROBOT_RANGE 120
+#define ROBOT_RANGE 40
 
 //Time it takes to drive around the circle
 #define Circle_time 3400
@@ -43,7 +45,7 @@ int RIGHT_CHECK = 1; //Checking right first
 #define SPEEDOFSENSOR 0.0340
 
 //Time to turn 90 degrees
-#define turn90 250
+#define turn90 230
 
 // TODO: Initialise more global variables to be used
 int currentState = WAITING;
@@ -70,7 +72,7 @@ void setup() {
 
     //Drive forwards to the edge of the circle
     while (checkBorder(IRPin) != 1) {
-        driveForwards(MAX_SPEED);
+        driveForwards(BEGINNING_SPEED);
     }
 
     //Turn hard right, should theoretically be 90 degrees
@@ -88,7 +90,6 @@ void setup() {
     stationaryTurnRight(MAX_SPEED);
     delay(turn90); // TODO
     stop();
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -100,68 +101,70 @@ void setup() {
 void loop() {
     //Now we need to start scanning for the robot
 
-    if (checkBorder(IRPin)) {
-        Serial.println("Front White");
-        driveBackwards(MAX_SPEED);
-        delay(100);
-        stationaryTurnRight(MAX_SPEED);
-        delay(50);
-    } else if (checkBorder(sideIRPin)) {
-        Serial.println("Side White");
-        stationaryTurnRight(MAX_SPEED);
-        delay(50);
-        driveForwards(MAX_SPEED);
-        delay(50);
-    } else {
+    // if (checkBorder(IRPin)) {
+    //     Serial.println("Front White");
+    //     driveBackwards(MAX_SPEED);
+    //     delay(100);
+    //     stationaryTurnRight(MAX_SPEED);
+    //     delay(50);
+    // } else if (checkBorder(sideIRPin)) {
+    //     Serial.println("Side White");
+    //     stationaryTurnRight(MAX_SPEED);
+    //     delay(50);
+    //     driveForwards(MAX_SPEED);
+    //     delay(50);
+    // } 
+    
+    // else {
         // A switch statement allows us to compare a given variable to multiple
         // cases.
         switch (currentState) {
-        case SEARCHING:
-            int i = 0;
-            while (currentState == SEARCHING) {
-                double distanceDetected = getDistance(trigPin1, echoPin1);
-                Serial.println("Distance detected: " + String(distanceDetected) + " cm");
-
-                //If/else conditionals based on detection
-                if (distanceDetected <= ROBOT_RANGE) {
-                    currentState = ATTACKING;
-                } else if(i < 15) {
-                    //Turn right first because it's likely the robot will be on our right (as we loop around the left)
-                    stationaryTurnRight(MAX_SPEED);
-                    i++;
-                } else {
-                    stationaryTurnLeft(MAX_SPEED);
-                    if (i == 45) {
-                        i = -15;
+            case SEARCHING:
+            searching:
+                int i = 0;
+                while (currentState == SEARCHING) {
+                    double distanceDetected = getDistance(trigPin1, echoPin1);
+                    Serial.println("Distance detected: " + String(distanceDetected) + " cm -- " + String(i));
+                    //If/else conditionals based on detection
+                    if (distanceDetected <= ROBOT_RANGE && distanceDetected != 0) {
+                        // if (i <= 5) {
+                        //     stationaryTurnRight(PARTIAL_SPEED);
+                        //     delay(5);
+                        // } else {
+                        //     stationaryTurnLeft(PARTIAL_SPEED);
+                        //     delay(5);
+                        // }
+                        currentState = ATTACKING;
+                    } else if (i < 10) {
+                        //Turn right first because it's likely the robot will be on our right (as we loop around the left)
+                        stationaryTurnRight(SP_SPEED); // change
+                        i++;
+                    } else {
+                        stationaryTurnLeft(SP_SPEED);
+                        if (i >= 26) {
+                            i = -10;
+                        }
+                        i++;
                     }
-                    i++;
+                    delay(100);
                 }
-                delay(50);
-            }
 
-        case ATTACKING:
-            // If it finds bot, ram at it
-            if (getDistance(trigPin1, echoPin1) <= ROBOT_RANGE) {
-                driveForwards(MAX_SPEED);
-            } else if (checkBorder(IRPin) == 1 && getDistance(trigPin1, echoPin1) <= ROBOT_RANGE) {
-                currentState = WAITING;
-            } else {
+            case ATTACKING:
+                // If it finds bot, ram at it
+                while (getDistance(trigPin1, echoPin1) <= ROBOT_RANGE ) {
+                    driveForwards(MAX_SPEED);
+                } 
                 currentState = SEARCHING;
+                goto searching;
+            default:
+                // This is for if the currentState is neither SEARCHING or ATTACKING
+                driveForwards(MAX_SPEED);
+                break;
             }
-        case WAITING:
-            // victorySpins();
-            stop();
-            delay(10000);
-            currentState = SEARCHING;
-        default:
-            // This is for if the currentState is neither SEARCHING or ATTACKING
-            driveForwards(MAX_SPEED);
-            break;
-        }
-        // What other states would you need? kys whoever wrote this
+            // What other states would you need? kys whoever wrote this
 
         delay(250); // Small delay for stability
-    }
+    // }
     Serial.println("End of loop.");
     // The bot will run this code if the IR detects white
     //what code ?
