@@ -18,26 +18,26 @@
 
 // TODO: Define constants/variables for motors (workshop 4)
 int RIGHT_SPEED = 10; // Speed pin, ranges from 0 to 255 (ENA)
-int RIGHT_F = 7; // Pin to move motor forwards (IN1)
-int RIGHT_R = 8; // Pin to move motor backwards (IN2)
+int RIGHT_F = 12; // Pin to move motor forwards (IN1)
+int RIGHT_R = 11; // Pin to move motor backwards (IN2)
 
 int LEFT_SPEED = 9; // Speed pin, ranges from 0 to 255 (ENB)
-int LEFT_F = 11; // Pin to move motor forwards (IN3)
-int LEFT_R = 12; // Pin to move motor backwards (IN4)
+int LEFT_F = 8; // Pin to move motor forwards (IN3)
+int LEFT_R = 7; // Pin to move motor backwards (IN4)
 
 int RIGHT_CHECK = 1; //Checking right first
 
 // TODO: Define other constants to be used in your sumobot
 #define MAX_SPEED 255
-#define PARTIAL_SPEED 84
-#define SP_SPEED 55
+#define PARTIAL_SPEED 92
+#define SP_SPEED 75
 #define BEGINNING_SPEED 65
 
 //Maximum distance robot can be, 999 for now until I'm told
-#define ROBOT_RANGE 40
+#define ROBOT_RANGE 80
 
 //Time it takes to drive around the circle
-#define Circle_time 3400
+#define Circle_time 2000
 
 #define WAITING 0
 #define SEARCHING 1
@@ -66,16 +66,28 @@ void setup() {
   //Stay in system state WAITING for 5 seconds
     if (currentState == WAITING) {
         Serial.println("Waiting 5 seconds before starting");
-        delay(2000); //REMEMBER TO CHANGE BACK TO 5 SECS
+        delay(5000); //REMEMBER TO CHANGE BACK TO 5 SECS
         currentState = SEARCHING;
     }
     //Get close but not over the edge
-    driveForwards(PARTIAL_SPEED);
-    delay(50);
-    //Drive forwards to the edge of the circle
-    while (checkBorder(IRPin) != 1) {
-        driveForwards(BEGINNING_SPEED);
+    driveForwards(MAX_SPEED-30);
+    int j = 0;
+    while (j < 8) {
+        if (checkBorder(IRPin) != 1) {
+            driveForwards(MAX_SPEED-30);
+        } else {
+            break;
+        }
+        delay(50);
+        j++;
     }
+
+
+    while (checkBorder(IRPin) != 1) {
+        driveForwards(SP_SPEED);
+    }
+    //Drive forwards to the edge of the circle
+    
 
     //Turn hard right, should theoretically be 90 degrees
     stationaryTurnRight(MAX_SPEED);
@@ -103,13 +115,11 @@ void setup() {
 void loop() {
     //Now we need to start scanning for the robot
 
-    // if (checkBorder(IRPin)) {
-    //     Serial.println("Front White");
-    //     driveBackwards(MAX_SPEED);
-    //     delay(100);
-    //     stationaryTurnRight(MAX_SPEED);
-    //     delay(50);
-    // } else if (checkBorder(sideIRPin)) {
+    if (checkBorder(IRPin)) {
+        stationaryTurnRight(MAX_SPEED);
+        delay(2 * turn90);
+        stop();
+    //} else if (checkBorder(sideIRPin)) {
     //     Serial.println("Side White");
     //     stationaryTurnRight(MAX_SPEED);
     //     delay(50);
@@ -117,12 +127,13 @@ void loop() {
     //     delay(50);
     // } 
     
-    // else {
+    } else {
         // A switch statement allows us to compare a given variable to multiple
         // cases.
         switch (currentState) {
             case SEARCHING:
             searching:
+                stop();
                 int i = 0;
                 while (currentState == SEARCHING) {
                     double distanceDetected = getDistance(trigPin1, echoPin1);
@@ -137,20 +148,17 @@ void loop() {
                         //     delay(5);
                         // }
                         currentState = ATTACKING;
-                    } else if (i < 10) {
+                    } else if (i < 6) {
                         //Turn right first because it's likely the robot will be on our right (as we loop around the left)
                         stationaryTurnRight(SP_SPEED); // change
                         i++;
+
                     } else {
                         stationaryTurnLeft(SP_SPEED);
-                        if (i >= 26) {
-                            i = -10;
-                        }
                         i++;
                     }
                     delay(100);
                 }
-
             case ATTACKING:
                 // If it finds bot, ram at it
                 while (getDistance(trigPin1, echoPin1) <= ROBOT_RANGE ) {
@@ -158,19 +166,15 @@ void loop() {
                 } 
                 currentState = SEARCHING;
                 goto searching;
-            default:
-                // This is for if the currentState is neither SEARCHING or ATTACKING
-                driveForwards(MAX_SPEED);
-                break;
-            }
-
-        delay(250); // Small delay for stability
+        }
+        delay(100); // Small delay for stability
     // }
     Serial.println("End of loop.");
     // The bot will run this code if the IR detects white
     //what code ?
     // What movement should the bot do in this situation?
     //declare victory
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
