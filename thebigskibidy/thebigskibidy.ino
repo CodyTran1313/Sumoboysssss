@@ -161,7 +161,6 @@ void loop() {
                 } else {
                     i = 0;
                 }
-                delay(100);
                 Serial.println("SEARCHING");
                 break;
             }
