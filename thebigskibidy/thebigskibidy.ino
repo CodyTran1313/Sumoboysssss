@@ -78,6 +78,7 @@ void setup() {
             delay(50);
         }
     } else if (currentState == ALTERNATE_STRAT) {
+        currentState == SEARCHING;
         goto loop_start;
     }
     //Get close but not over the edge
