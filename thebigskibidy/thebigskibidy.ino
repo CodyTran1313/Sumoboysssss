@@ -161,7 +161,6 @@ void loop() {
                 } else {
                     i = 0;
                 }
-                delay(50); //THIS IS THE DELAY TO KEEP
                 Serial.println("SEARCHING");
                 break;
             }
@@ -177,7 +176,7 @@ void loop() {
                 break;
             }
         }
-    // }
+    delay(50); //THIS IS THE DELAY TO KEEP
     Serial.println("End of loop.");
     // The bot will run this code if the IR detects white
     //what code ?
