@@ -27,16 +27,18 @@ int LEFT_R = 7; // Pin to move motor backwards (IN4)
 
 int RIGHT_CHECK = 1; //Checking right first
 
-// TODO: Define other constants to be used in your sumobot
+int i = 0; //Counter
+
+// SPEED CONSTANTS
 #define MAX_SPEED 255
 #define PARTIAL_SPEED 92
 #define SP_SPEED 75
 #define BEGINNING_SPEED 65
 
-//Maximum distance robot can be, 999 for now until I'm told
+//Maximum distance robot can be
 #define ROBOT_RANGE 80
 
-//Time it takes to drive around the circle
+//Time it takes to drive 1/4 around the circle
 #define Circle_time 2000
 
 #define WAITING 0
@@ -78,10 +80,11 @@ void setup() {
             delay(50);
         }
     } else if (currentState == ALTERNATE_STRAT) {
-        currentState == SEARCHING;
-        goto loop_start;
+        currentState = SEARCHING;
+        return;
     }
-    //Get close but not over the edge
+
+    //Driving x amount of distance just to get it done fast
     driveForwards(MAX_SPEED-30);
     int j = 0;
     while (j < 8) {
@@ -94,20 +97,18 @@ void setup() {
         j++;
     }
 
-
+    //going slower towards the edge to make sure we don't cross
     while (checkBorder(IRPin) != 1) {
         driveForwards(SP_SPEED);
     }
-    //Drive forwards to the edge of the circle
-    
 
     //Turn hard right, should theoretically be 90 degrees
     stationaryTurnRight(MAX_SPEED);
     delay(turn90);
     stop();
 
-    //Drives around the circumference of the circle until it's in the appropriate position
-    double startTime = millis();
+    //Wrapping around the edge of the circle, 
+    unsigned long startTime = millis();
     while (millis() <= startTime + Circle_time) {
         turnRightSlight(MAX_SPEED, PARTIAL_SPEED);
     }
@@ -124,7 +125,6 @@ void setup() {
 
 // This function is where all your logic will go. The provided template uses the 
 // 'states model' discussed in week 5's build session.
-loop_start:
 void loop() {
     //Now we need to start scanning for the robot
 
@@ -144,41 +144,36 @@ void loop() {
         // A switch statement allows us to compare a given variable to multiple
         // cases.
         switch (currentState) {
-            case SEARCHING:
-            searching:
-                stop();
-                int i = 0;
-                while (currentState == SEARCHING) {
-                    double distanceDetected = getDistance(trigPin1, echoPin1);
-                    Serial.println("Distance detected: " + String(distanceDetected) + " cm -- " + String(i));
-                    //If/else conditionals based on detection
-                    if (distanceDetected <= ROBOT_RANGE && distanceDetected != 0) {
-                        // if (i <= 5) {
-                        //     stationaryTurnRight(PARTIAL_SPEED);
-                        //     delay(5);
-                        // } else {
-                        //     stationaryTurnLeft(PARTIAL_SPEED);
-                        //     delay(5);
-                        // }
-                        currentState = ATTACKING;
-                    } else if (i < 6) {
-                        //Turn right first because it's likely the robot will be on our right (as we loop around the left)
-                        stationaryTurnRight(SP_SPEED); // change
-                        i++;
+            case SEARCHING: {
+                double distanceDetected = getAverageDistance(trigPin1, echoPin1);
+                Serial.println("Distance detected: " + String(distanceDetected) + " cm -- " + String(i));
+                //If/else conditionals based on detection
+                if (distanceDetected <= ROBOT_RANGE && distanceDetected != 0) {
+                    currentState = ATTACKING;
+                } else if (i < 30) {
+                    //Turn right first because it's likely the robot will be on our right (as we loop around the left)
+                    stationaryTurnRight(SP_SPEED); // change
+                    i++;
 
-                    } else {
-                        stationaryTurnLeft(SP_SPEED);
-                        i++;
-                    }
-                    delay(100);
+                } else {
+                    stationaryTurnLeft(SP_SPEED);
+                    i++;
+                    if (i > 1000) i = 0;
                 }
-            case ATTACKING:
+                delay(20);
+                break;
+            }
+            case ATTACKING:{
                 // If it finds bot, ram at it
-                while (getDistance(trigPin1, echoPin1) <= ROBOT_RANGE ) {
+                unsigned long attackStart = millis();
+                while (getAverageDistance(trigPin1, echoPin1) <= ROBOT_RANGE && !checkBorder(IRPin) && millis() - attackStart < 3000) {
                     driveForwards(MAX_SPEED);
-                } 
+                }
                 currentState = SEARCHING;
-                goto searching;
+                stop();
+                i = 0;
+                break;
+            }
         }
         delay(100); // Small delay for stability
     // }
@@ -194,13 +189,25 @@ void loop() {
 /////////////////////////// Sensor Functions ///////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
+// Function to get average distance for stability
+// Gets a smoothed average distance over N readings
+double getAverageDistance(int trigPin, int echoPin) {
+    double total = 0;
+    for (int i = 0; i < 3; i++) {
+        total += getDistance(trigPin, echoPin);
+        delay(5); // Small delay between readings
+    }
+    return total / 3;
+}
+
 /*  Function: Get Distance
 /   parameters: trigPin, EchoPin
 /   returns: distance
 /   summary: uses ultrasonic sensor to get distance of object in front
 */
 double getDistance(int trigPin, int echoPin) {
-    double distance, duration;
+    double distance;
+    unsigned long duration;
     digitalWrite(trigPin, LOW);
     delayMicroseconds(2);
     digitalWrite(trigPin, HIGH);
@@ -209,6 +216,12 @@ double getDistance(int trigPin, int echoPin) {
     duration = pulseIn(echoPin, HIGH);
     distance = (duration * SPEEDOFSENSOR) / 2; // distance's unit is cm and duration is in ms 
     Serial.println("Distance detected: " + String(distance) + " cm");
+
+    //Filtering out junk values
+    if (distance > 200 || distance == 0) {
+      return 9999;
+    }
+    
     return distance;
 }
 
