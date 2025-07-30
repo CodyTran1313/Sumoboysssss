@@ -150,7 +150,7 @@ void loop() {
                 //If/else conditionals based on detection
                 if (distanceDetected <= ROBOT_RANGE && distanceDetected != 0) {
                     currentState = ATTACKING;
-                } else if (i < 6) {
+                } else if (i < 12) {
                     //Turn right first because it's likely the robot will be on our right (as we loop around the left)
                     stationaryTurnRight(SP_SPEED); // change
                     i++;
@@ -177,7 +177,6 @@ void loop() {
                 break;
             }
         }
-        delay(100); // Small delay for stability
     // }
     Serial.println("End of loop.");
     // The bot will run this code if the IR detects white
