@@ -42,12 +42,14 @@ int RIGHT_CHECK = 1; //Checking right first
 #define WAITING 0
 #define SEARCHING 1
 #define ATTACKING 2
+#define FORWARDS 3
 #define SPEEDOFSENSOR 0.0340
 
 //Time to turn 90 degrees
 #define turn90 230
 
 // TODO: Initialise more global variables to be used
+//CHANGE TO FORWARDS IF NECESSARY
 int currentState = WAITING;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -68,6 +70,11 @@ void setup() {
         Serial.println("Waiting 5 seconds before starting");
         delay(5000); //REMEMBER TO CHANGE BACK TO 5 SECS
         currentState = SEARCHING;
+    } else if (currentState == FORWARDS) {
+        while (1) {
+            driveForwards(MAX_SPEED);
+            delay(50);
+        }
     }
     //Get close but not over the edge
     driveForwards(MAX_SPEED-30);
