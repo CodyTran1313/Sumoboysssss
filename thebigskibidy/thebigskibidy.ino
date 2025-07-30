@@ -145,33 +145,35 @@ void loop() {
         // cases.
         switch (currentState) {
             case SEARCHING: {
-                double distanceDetected = getAverageDistance(trigPin1, echoPin1);
+                double distanceDetected = getDistance(trigPin1, echoPin1);
                 Serial.println("Distance detected: " + String(distanceDetected) + " cm -- " + String(i));
                 //If/else conditionals based on detection
                 if (distanceDetected <= ROBOT_RANGE && distanceDetected != 0) {
                     currentState = ATTACKING;
-                } else if (i < 30) {
+                } else if (i < 6) {
                     //Turn right first because it's likely the robot will be on our right (as we loop around the left)
                     stationaryTurnRight(SP_SPEED); // change
                     i++;
 
-                } else {
+                } else if (i < 36) {
                     stationaryTurnLeft(SP_SPEED);
                     i++;
-                    if (i > 1000) i = 0;
+                } else {
+                  i = 0;
                 }
-                delay(20);
+                delay(50);
+                Serial.println("SEARCHING");
                 break;
             }
             case ATTACKING:{
                 // If it finds bot, ram at it
                 unsigned long attackStart = millis();
-                while (getAverageDistance(trigPin1, echoPin1) <= ROBOT_RANGE && !checkBorder(IRPin) && millis() - attackStart < 3000) {
+                while (getDistance(trigPin1, echoPin1) <= ROBOT_RANGE && !checkBorder(IRPin)) {
                     driveForwards(MAX_SPEED);
                 }
                 currentState = SEARCHING;
                 stop();
-                i = 0;
+                int i = 0;
                 break;
             }
         }
@@ -215,7 +217,7 @@ double getDistance(int trigPin, int echoPin) {
     digitalWrite(trigPin, LOW);
     duration = pulseIn(echoPin, HIGH);
     distance = (duration * SPEEDOFSENSOR) / 2; // distance's unit is cm and duration is in ms 
-    Serial.println("Distance detected: " + String(distance) + " cm");
+    //Serial.println("Distance detected: " + String(distance) + " cm");
 
     //Filtering out junk values
     if (distance > 200 || distance == 0) {
@@ -236,7 +238,7 @@ double getDistance(int trigPin, int echoPin) {
 int checkBorder(int irSensorPin) {
     int statusSensor = digitalRead(irSensorPin);
     if (statusSensor == HIGH) {
-        Serial.println("Detected 1");
+        //Serial.println("Detected 1");
         return 1;
     } else {
         return 0;
@@ -257,7 +259,7 @@ int checkBorder(int irSensorPin) {
 */
 void driveForwards(int speed)
 {
-Serial.println("Driving forward");
+    //Serial.println("Driving forward");
     analogWrite(LEFT_SPEED, speed);
     analogWrite(RIGHT_SPEED, speed);
 
