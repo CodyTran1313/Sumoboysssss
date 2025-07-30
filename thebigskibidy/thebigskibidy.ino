@@ -176,8 +176,6 @@ void loop() {
                 break;
             }
         }
-        /////////// CHANGE THIS TO 100 and HALVE i above ^^^^ if needed///////
-        delay(50); // Small delay for stability
     // }
     Serial.println("End of loop.");
     // The bot will run this code if the IR detects white
