@@ -85,11 +85,11 @@ void setup() {
     }
 
     //Driving x amount of distance just to get it done fast
-    driveForwards(MAX_SPEED-30);
+    driveForwards(MAX_SPEED);
     int j = 0;
     while (j < 8) {
         if (checkBorder(IRPin) != 1) {
-            driveForwards(MAX_SPEED-30);
+            driveForwards(MAX_SPEED);
         } else {
             break;
         }
@@ -159,9 +159,9 @@ void loop() {
                     stationaryTurnLeft(SP_SPEED);
                     i++;
                 } else {
-                  i = 0;
+                    i = 0;
                 }
-                delay(50);
+                delay(100);
                 Serial.println("SEARCHING");
                 break;
             }
