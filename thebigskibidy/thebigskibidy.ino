@@ -43,6 +43,7 @@ int RIGHT_CHECK = 1; //Checking right first
 #define SEARCHING 1
 #define ATTACKING 2
 #define FORWARDS 3
+#define ALTERNATE_STRAT 4
 #define SPEEDOFSENSOR 0.0340
 
 //Time to turn 90 degrees
@@ -50,6 +51,7 @@ int RIGHT_CHECK = 1; //Checking right first
 
 // TODO: Initialise more global variables to be used
 //CHANGE TO FORWARDS IF NECESSARY
+//CHANGE TO ALTERNATE_STRAT IF FACE FOWARDS SCAN AND DRIVE
 int currentState = WAITING;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -75,6 +77,8 @@ void setup() {
             driveForwards(MAX_SPEED);
             delay(50);
         }
+    } else if (currentState == ALTERNATE_STRAT) {
+        goto loop_start;
     }
     //Get close but not over the edge
     driveForwards(MAX_SPEED-30);
@@ -119,6 +123,7 @@ void setup() {
 
 // This function is where all your logic will go. The provided template uses the 
 // 'states model' discussed in week 5's build session.
+loop_start:
 void loop() {
     //Now we need to start scanning for the robot
 
